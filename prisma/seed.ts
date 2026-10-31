@@ -31,9 +31,9 @@ async function main() {
   }
 
   const user = await prisma.user.upsert({
-    where: { email: "demo@apexhire.dev" },
+    where: { email: process.env.SEED_EMAIL ?? "demo@apexhire.dev" },
     update: {},
-    create: { email: "demo@apexhire.dev", name: "Demo User" },
+    create: { email: process.env.SEED_EMAIL ?? "demo@apexhire.dev", name: "Demo User" },
   });
 
   await prisma.application.deleteMany({ where: { userId: user.id } });

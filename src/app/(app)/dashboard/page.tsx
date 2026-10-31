@@ -1,12 +1,36 @@
+import { Board } from "@/components/board/board";
+import { describeAge } from "@/lib/format";
+import { prisma } from "@/lib/prisma";
+import { requireUserId } from "@/lib/session";
+
 export const metadata = { title: "Dashboard" };
 
-export default function DashboardPage() {
-  return (
-    <div>
-      <h1 className="text-xl font-semibold">Applications</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        No applications yet. Your board will appear here.
-      </p>
-    </div>
-  );
+export default async function DashboardPage() {
+  const userId = await requireUserId();
+
+  const rows = await prisma.application.findMany({
+    where: { userId },
+    orderBy: [{ position: "asc" }, { createdAt: "asc" }],
+  });
+
+  const now = new Date();
+  const applications = rows.map((row) => ({
+    id: row.id,
+    company: row.company,
+    title: row.title,
+    location: row.location,
+    url: row.url,
+    salaryText: row.salaryText,
+    notes: row.notes,
+    status: row.status,
+    version: row.version,
+    meta: [
+      row.location,
+      `${row.appliedDate ? "Applied" : "Saved"} ${describeAge(row.appliedDate ?? row.createdAt, now)}`,
+    ]
+      .filter(Boolean)
+      .join(" · "),
+  }));
+
+  return <Board applications={applications} />;
 }
